@@ -1,5 +1,9 @@
 # Token Radar — Pre-Token Protocols by Implied Launch Value
 
+[![make.fun · token-radar-01](https://make.fun/badge/token-radar-01.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
+[![rank](https://make.fun/badge/token-radar-01/Ocarsx/token-radar-01/rank.svg)](https://make.fun/bounty/token-radar-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
+[![reward](https://make.fun/badge/token-radar-01/Ocarsx/token-radar-01/reward.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
+
 Entry for make.fun competition **token-radar-01** ("Build the best token launch radar").
 A Node 22 program reads a sealed DefiLlama snapshot, ranks the protocols that
 record no token by what their launch would be worth, and writes a static
