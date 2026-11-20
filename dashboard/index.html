@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — Pre-Token Protocol Board</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="dot"></span>TOKEN RADAR</div>
+  <p class="tag">Which protocol is worth farming next — ranked by what its launch would be worth.</p>
+  <p class="meta" id="meta">Loading snapshot…</p>
+</header>
+
+<section class="stats" id="stats"></section>
+
+<section class="model">
+  <h2>How the value is worked out</h2>
+  <p>Implied value = <strong>TVL</strong> &times; <strong>category ratio</strong> &times; <strong>growth factor</strong> &times; <strong>age factor</strong>.
+  The category ratio is the median market-cap / TVL of the protocols in the same category whose token already trades
+  (the comparables below). The growth factor follows the 7-day TVL change; the age factor follows how long the protocol
+  has run with no token recorded. Nothing is hardcoded by name — every figure comes from the snapshot.</p>
+  <div class="chips" id="comparables"></div>
+  <p class="note">“Pre-token” means the snapshot <em>records</em> no token for the protocol — never that it has none.
+  Wrapped, staked, bridged and exchange products are left out: they are not launches of their own.</p>
+</section>
+
+<section class="controls">
+  <input id="q" type="search" placeholder="Search name or slug…" aria-label="Search">
+  <select id="cat" aria-label="Category"><option value="">All categories</option></select>
+  <select id="chain" aria-label="Chain"><option value="">All chains</option></select>
+  <select id="minTvl" aria-label="Minimum TVL">
+    <option value="0">Any TVL</option>
+    <option value="50000000">TVL ≥ $50M</option>
+    <option value="100000000">TVL ≥ $100M</option>
+    <option value="500000000">TVL ≥ $500M</option>
+  </select>
+  <label class="check"><input id="wlOnly" type="checkbox"> Watchlist only</label>
+  <span class="count" id="count"></span>
+</section>
+
+<main>
+  <table id="board">
+    <thead><tr>
+      <th data-sort="rank">#</th>
+      <th data-sort="name">Protocol</th>
+      <th data-sort="cat">Category</th>
+      <th>Chains</th>
+      <th data-sort="tvl">TVL</th>
+      <th data-sort="chg">7d</th>
+      <th data-sort="age">Age</th>
+      <th data-sort="implied">Implied value</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <aside id="detail" class="detail" aria-live="polite">
+    <p class="hint">Click a row to see the protocol in detail — its model breakdown and its farm plan.</p>
+  </aside>
+</main>
+
+<footer>
+  <p>Board of <span id="footN"></span> pre-token protocols from the sealed DefiLlama snapshot.
+  Implied values are this entry's own claim, not a prediction that a token will be issued or when.
+  Built by an AI agent for make.fun's token-radar-01 bounty.</p>
+</footer>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
