@@ -3,67 +3,73 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Token Radar — Pre-Token Protocol Board</title>
+<title>Token Radar — Pre-Token Protocols by Implied Launch Value</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
 <header class="top">
   <div class="brand"><span class="dot"></span>TOKEN RADAR</div>
-  <p class="tag">Which protocol is worth farming next — ranked by what its launch would be worth.</p>
-  <p class="meta" id="meta">Loading snapshot…</p>
+  <h1>Which pre-token protocol is worth farming next?</h1>
+  <p class="sub">198 protocols that record no token, ranked by what their launch would be worth if their record stayed as it is. Implied value is this board's own claim, never a promise — a protocol on this board may still have a token its record does not carry.</p>
+  <div class="stats" id="stats"></div>
 </header>
 
-<section class="stats" id="stats"></section>
-
-<section class="model">
+<section class="panel" id="method">
   <h2>How the value is worked out</h2>
-  <p>Implied value = <strong>TVL</strong> &times; <strong>category ratio</strong> &times; <strong>growth factor</strong> &times; <strong>age factor</strong>.
-  The category ratio is the median market-cap / TVL of the protocols in the same category whose token already trades
-  (the comparables below). The growth factor follows the 7-day TVL change; the age factor follows how long the protocol
-  has run with no token recorded. Nothing is hardcoded by name — every figure comes from the snapshot.</p>
-  <div class="chips" id="comparables"></div>
-  <p class="note">“Pre-token” means the snapshot <em>records</em> no token for the protocol — never that it has none.
-  Wrapped, staked, bridged and exchange products are left out: they are not launches of their own.</p>
+  <p><strong>implied = TVL × ratio × growth × age × concentration.</strong>
+  <strong>Ratio</strong> is a size-aware multiple fitted from the snapshot itself: the market pays fewer dollars per TVL dollar as protocols get bigger, so we fit log(mcap/TVL) against log(TVL) over the 128 token-bearing comparables and read each protocol's multiple off that line, then bend it toward its category's median multiple (only when the category has 3+ comparables, shrunk by n/(n+6)). A category with one stray comparable cannot set a price.
+  <strong>Growth</strong> is 1 + clamp(7-day TVL change, −30%, +100%) / 200.
+  <strong>Age</strong> is 0.70 + 0.15 × years listed (capped at 4 years); unlisted counts as 1.00.
+  <strong>Concentration</strong> is 1 for the top 2 protocols of a category by TVL and 1.5/(k+1) after that — a category's launch premium concentrates in its leaders, so no single category can fill the top of the board. Nothing here names a protocol: every number comes from the snapshot's own figures.</p>
+  <p class="note">The board separates the two groups: below, the ranked board holds only protocols that record no token. The comparables table lists token-bearing protocols whose real market caps the model is fitted against.</p>
 </section>
 
-<section class="controls">
-  <input id="q" type="search" placeholder="Search name or slug…" aria-label="Search">
-  <select id="cat" aria-label="Category"><option value="">All categories</option></select>
-  <select id="chain" aria-label="Chain"><option value="">All chains</option></select>
-  <select id="minTvl" aria-label="Minimum TVL">
-    <option value="0">Any TVL</option>
-    <option value="50000000">TVL ≥ $50M</option>
-    <option value="100000000">TVL ≥ $100M</option>
-    <option value="500000000">TVL ≥ $500M</option>
+<section class="panel">
+  <h2>Implied value by category</h2>
+  <p class="note">Total implied value of the ranked board, grouped by category. The chart is drawn from the board data.</p>
+  <div id="chart" class="chart"></div>
+</section>
+
+<section class="panel controls">
+  <input id="q" type="search" placeholder="Search name or slug…" aria-label="Search protocols">
+  <select id="cat" aria-label="Filter by category"><option value="">All categories</option></select>
+  <select id="sort" aria-label="Sort board">
+    <option value="rank">Sort: rank</option>
+    <option value="implied">Sort: implied value</option>
+    <option value="tvl">Sort: TVL</option>
+    <option value="growth">Sort: 7-day growth</option>
+    <option value="name">Sort: name</option>
   </select>
-  <label class="check"><input id="wlOnly" type="checkbox"> Watchlist only</label>
-  <span class="count" id="count"></span>
+  <label class="check"><input id="wl" type="checkbox"> Watchlist only</label>
+  <span id="count" class="count"></span>
 </section>
 
-<main>
-  <table id="board">
-    <thead><tr>
-      <th data-sort="rank">#</th>
-      <th data-sort="name">Protocol</th>
-      <th data-sort="cat">Category</th>
-      <th>Chains</th>
-      <th data-sort="tvl">TVL</th>
-      <th data-sort="chg">7d</th>
-      <th data-sort="age">Age</th>
-      <th data-sort="implied">Implied value</th>
-    </tr></thead>
-    <tbody id="rows"></tbody>
-  </table>
-  <aside id="detail" class="detail" aria-live="polite">
-    <p class="hint">Click a row to see the protocol in detail — its model breakdown and its farm plan.</p>
+<main class="layout">
+  <section class="panel board-wrap">
+    <table id="board">
+      <thead><tr>
+        <th data-k="rank">#</th><th data-k="name">Protocol</th><th data-k="category">Category</th>
+        <th data-k="tvl">TVL</th><th data-k="growth">7d</th><th data-k="implied">Implied value</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="note">Click any row to open its detail view and farm plan.</p>
+  </section>
+  <aside class="panel detail" id="detail">
+    <div id="detailBody"><p class="note">Select a protocol to see its detail and farm plan.</p></div>
   </aside>
 </main>
 
-<footer>
-  <p>Board of <span id="footN"></span> pre-token protocols from the sealed DefiLlama snapshot.
-  Implied values are this entry's own claim, not a prediction that a token will be issued or when.
-  Built by an AI agent for make.fun's token-radar-01 bounty.</p>
+<section class="panel">
+  <h2>Comparables — tokens that already trade</h2>
+  <p class="note">The largest token-bearing protocols in the snapshot, with their real market caps. The model is fitted against all 128 of them; these 12 are shown. They are not board subjects.</p>
+  <table id="comps"><thead><tr><th>Protocol</th><th>Category</th><th>TVL</th><th>Market cap</th><th>mcap / TVL</th></tr></thead><tbody id="compRows"></tbody></table>
+</section>
+
+<footer class="foot">
+  <p>Snapshot as of <span id="asOf"></span> · floor $50M · 40 watchlist protocols, all covered · 198 ranked · Source: the snapshot's own figures; model v2.</p>
 </footer>
+
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
