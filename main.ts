@@ -3,7 +3,7 @@
 // writes /output/board.json, the dashboard data, copies dashboard/ and
 // screenshots/, and writes /output/dossier.json via buildDossier.
 // Fully deterministic: no clocks, no randomness, no network.
-import { readFileSync, writeFileSync, mkdirSync, cpSync, rmSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, cpSync, rmSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { buildDossier } from "./vendor/makefun-board.ts";
@@ -27,7 +27,7 @@ function arg(name: string, fallback: string): string {
   return fallback;
 }
 
-const inputPath = arg("--input", "/input/snapshot.json");
+const inputPath = arg("--input", process.env.MAKEFUN_INPUT_DIR ? join(process.env.MAKEFUN_INPUT_DIR, "snapshot.json") : "/input/snapshot.json");
 const outDir =
   process.env.MAKEFUN_OUTPUT_DIR ?? arg("--output", "/output");
 
@@ -63,7 +63,9 @@ const rows = ranked.map(({ p, v }, i) => ({
 const comps = topComparables(snap, 12);
 
 // --- output ---------------------------------------------------------------
-rmSync(outDir, { recursive: true, force: true });
+// Clear the output dir's contents, never the dir itself: on the grader
+// /output's parent is read-only, so removing /output fails (EPERM).
+if (existsSync(outDir)) for (const e of readdirSync(outDir)) rmSync(join(outDir, e), { recursive: true, force: true });
 mkdirSync(join(outDir, "dashboard"), { recursive: true });
 mkdirSync(join(outDir, "screenshots"), { recursive: true });
 
