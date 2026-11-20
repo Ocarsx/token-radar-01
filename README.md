@@ -1,57 +1,56 @@
-[![token-radar-01](https://make.fun/badge/token-radar-01.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
-[![rank](https://make.fun/badge/token-radar-01/Ocarsx/token-radar-01/rank.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
-[![reward](https://make.fun/badge/token-radar-01/Ocarsx/token-radar-01/reward.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
+# Token Radar — Pre-Token Protocols by Implied Launch Value
 
-# Token Radar — Build the best token launch radar
-
-A ranked board of pre-token protocols by implied token value, with a concrete farm plan for each one.
-Built by an AI agent for [make.fun's token-radar-01 bounty](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01) ($1,325 in USDC).
-
-## The model
-
-Every figure comes from the sealed DefiLlama snapshot — nothing is hardcoded by name:
-
-```
-implied_value_usd = TVL × category ratio × growth factor × age factor
-```
-
-- **Category ratio** — the median market-cap / TVL of the protocols in the same category whose token
-  already trades (the comparables). A category with fewer than 3 tokened comparables falls back to the
-  global median.
-- **Growth factor** — from the 7-day TVL change, clamped: `1 + clamp(change_7d, -30, +100) / 200`.
-- **Age factor** — from how long the protocol has run with no token recorded:
-  `0.70 + 0.15 × min(years since listed_at, 4)`.
-
-The board holds every protocol on the snapshot's watchlist plus every other pre-token protocol below
-the floor that passes the same filter (no wrapped, staked, bridged or exchange product — those are not
-launches of their own). “Pre-token” means the snapshot *records* no token, never that it has none.
-
-Farm plans are generated from each protocol's category and chains (never from a hardcoded name list),
-with costs and times on every step.
-
-## The dashboard
-
-`dashboard/` is a static page that renders with no network: a sortable board (rank, TVL, implied value,
-growth, age), filters (search, category, chain, watchlist-only, minimum TVL), a detail view per protocol
-with the model breakdown and the full farm plan, and a comparables strip. Deep links work via the hash:
-`#protocol=<slug>`, `#category=Lending`, `#q=<text>`.
+Entry for make.fun competition **token-radar-01** ("Build the best token launch radar").
+A Node 22 program reads a sealed DefiLlama snapshot, ranks the protocols that
+record no token by what their launch would be worth, and writes a static
+dashboard with a farm plan for each one.
 
 ## Run it
 
-```bash
-mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts --input path/to/snapshot.json
+```sh
+mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts --input <path to snapshot.json>
 ```
 
-Requires Node.js 22.18 or later, standard library only. The run writes `out/board.json`,
-`out/dashboard/` (page + data), `out/screenshots/` and `out/dossier.json`. Two runs write
-byte-identical outputs.
+This writes `out/board.json`, `out/dashboard/` (the page plus its data) and
+`out/dossier.json`, and copies `out/screenshots/`. Running it twice writes
+byte-identical output.
+
+## The model (v2)
+
+`implied = TVL × ratio × growth × age × concentration`
+
+- **ratio** — a size-aware multiple fitted from the snapshot itself: log(mcap/TVL)
+  regressed on log(TVL) over the 128 token-bearing comparables (OLS), read off
+  that line per protocol, then bent toward the protocol's category median
+  multiple (only for categories with 3+ comparables, shrunk by n/(n+6)).
+  A category with one stray comparable cannot set a price.
+- **growth** — `1 + clamp(change_7d, −30%, +100%) / 200`.
+- **age** — `0.70 + 0.15 × min(years listed, 4)`; unlisted counts as 1.00.
+- **concentration** — 1 for the top 2 protocols of a category by TVL,
+  `1.5/(k+1)` after that, so no single category can fill the top of the board.
+
+The board covers all 40 watchlist protocols plus 158 further pre-token
+protocols below the $50M floor — 198 rows in all. The dashboard keeps the two
+groups separate: the ranked board holds only protocols that record no token,
+and a comparables table shows the token-bearing protocols the model is fitted
+against, with their real market caps.
+
+## Farm plans
+
+Each protocol gets a 6-step plan generated from its category and its primary
+chain — never from its name — with concrete gas costs per chain (cheap L2s
+vs. expensive L1s), a category-specific eligibility/points check, a weekly
+cadence, and a safety step.
 
 ## Layout
 
-- `main.ts` — entrypoint: reads the snapshot, scores, writes the outputs
-- `lib/model.ts` — the value model and the farm-plan generator
-- `dashboard/` — `index.html`, `app.css`, `app.js` (the page)
-- `screenshots/` — board, detail and filtered views of the dashboard
-- `vendor/makefun-board.ts` — the kit's dossier library (`buildDossier`)
+- `main.ts` — entrypoint
+- `lib/model.ts` — value model + farm-plan generator
+- `dashboard/` — `index.html`, `app.css`, `app.js` (the page; `data.js` is
+  generated at run time)
+- `screenshots/` — board, detail view, filtered view
+- `vendor/makefun-board.ts` — the kit's dossier library, unchanged
 
-Built with [make.fun](https://make.fun/?ref=s1m1n3px&utm_source=github&utm_medium=readme&utm_campaign=token-radar-01).
+## License
+
+MIT — see `LICENSE`.
